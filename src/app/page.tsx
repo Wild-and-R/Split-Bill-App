@@ -1,8 +1,15 @@
+'use client';
+
+import { useState } from 'react';
 import ReceiptUploader from '@/components/ReceiptUploader';
+import ItemList from '@/components/ItemList';
 
 export default function Home() {
+  // This state holds the array of items { name: string, price: number }
+  const [items, setItems] = useState<any[]>([]);
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
       {/* Navigation / Header */}
       <header className="w-full py-6 px-4 bg-white shadow-sm flex justify-center items-center">
         <h1 className="text-2xl font-bold text-blue-600 tracking-tight">
@@ -12,26 +19,37 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="flex-grow flex flex-col items-center px-4 py-12">
-        <div className="text-center max-w-2xl mb-12">
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-4 leading-tight">
-            Stop the "How should we split the bill?" headache
-          </h2>
-          <p className="text-lg text-gray-600">
-            Snap your receipt and share the bill in seconds.
-          </p>
-        </div>
-
-        <div className="w-full max-w-lg">
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-            <div className="p-1">
-              <ReceiptUploader />
-            </div>
+        <div className="w-full max-w-lg space-y-8">
+          
+          {/* Hero Section (hidden after analysis) */}
+          {items.length === 0 && (
+          <div className="text-center max-w-2xl mx-auto mb-12 animate-in fade-in duration-500">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4 leading-tight">
+              Stop the "How should we split the bill?" headache
+            </h2>
+            <p className="text-lg text-gray-600">
+              Snap your receipt and share the bill in seconds.
+            </p>
           </div>
-        </div>
+          )}
 
-        {/* Simple 1-2-3 Guide */}
-        <section className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl">
-          <div>
+          {/* Section 1: Upload UI */}
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-1">
+            {/* Pass a function to ReceiptUploader to 'lift' the data up when ready */}
+            <ReceiptUploader onAnalysisComplete={(extractedItems) => setItems(extractedItems)} />
+          </div>
+
+          {/* Section 2: Review & Split Logic (Visible only after analysis) */}
+          {items.length > 0 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <ItemList initialItems={items} />
+            </div>
+          )}
+
+          {/* Section 3: Simple 1-2-3 Guide (Hidden once items are loaded) */}
+          {items.length === 0 && (
+            <section className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              <div>
             <div className="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4 font-bold">1</div>
             <h3 className="font-semibold text-gray-800">Upload</h3>
             <p className="text-sm text-gray-500">Photo your receipt from the restaurant.</p>
@@ -47,6 +65,8 @@ export default function Home() {
             <p className="text-sm text-gray-500">Send split bills in WhatsApp to everyone.</p>
           </div>
         </section>
+        )}
+        </div>
       </main>
 
       {/* Footer */}
