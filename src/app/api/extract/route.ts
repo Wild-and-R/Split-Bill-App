@@ -1,17 +1,26 @@
-import { anthropic } from '@/lib/anthropic';
+import { model } from '@/lib/gemini';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const { rawText } = await req.json();
+  try {
+    const { rawText } = await req.json();
 
-  const msg = await anthropic.messages.create({
-    model: "claude-3-5-sonnet-20240620",
-    max_tokens: 1024,
-    messages: [{ 
-      role: "user", 
-      content: `Extract items and prices from this receipt text into JSON format: ${rawText}` 
-    }],
-  });
+    const prompt = `
+      Extract items and prices from this messy OCR receipt text. 
+      Return a JSON object with a key "items" which is an array of objects.
+      Each object must have "name" (string) and "price" (number).
+      Ignore logos or random symbols.
+      
+      Receipt Text: ${rawText}
+    `;
 
-  return NextResponse.json({ data: msg.content });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    return NextResponse.json(JSON.parse(text));
+  } catch (error) {
+    console.error("Gemini Error:", error);
+    return NextResponse.json({ error: "Failed to structure data" }, { status: 500 });
+  }
 }
