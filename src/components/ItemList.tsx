@@ -117,11 +117,15 @@ export default function ItemList({ initialItems }: ItemListProps) {
   };
 
   const shareTelegram = () => {
-    window.open(
-      `https://t.me/share/url?url=&text=${encodeURIComponent(shareText)}`,
-      '_blank'
-    );
-  };
+  const text = encodeURIComponent(shareText);
+  const url = encodeURIComponent(window.location.href);
+
+  window.open(
+    `https://t.me/share/url?url=${url}&text=${text}`,
+    '_blank'
+  );
+};
+
 
   // Save as Image
   const saveAsImage = () => {
