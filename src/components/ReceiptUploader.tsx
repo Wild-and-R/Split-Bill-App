@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { performOCR } from '@/lib/ocr';
 
 interface UploaderProps {
@@ -23,6 +23,8 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
     setPreview(URL.createObjectURL(f));
     setError(null);
   };
+
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleProcessReceipt = async () => {
     if (!file) return;
@@ -63,23 +65,28 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
       <div className="flex flex-col gap-3">
         {/* Take Photo (Mobile only) */}
         {isMobile && (
-          <label className="block w-full">
-            <span className="block text-sm font-semibold mb-1">Take Photo</span>
+          <>
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              className="w-full bg-green-600 text-white py-3 rounded-xl font-bold"
+            >
+              Take Photo
+            </button>
+
             <input
+              ref={cameraInputRef}
               type="file"
               accept="image/*"
               capture="environment"
+              className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (!f) return;
                 handleFileChange(f);
               }}
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:bg-blue-50 file:text-blue-700"
             />
-          </label>
+          </>
         )}
 
         {/* Upload Picture (Desktop + Mobile) */}
