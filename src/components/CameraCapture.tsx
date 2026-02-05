@@ -23,11 +23,15 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
 
   const receiptContourRef = useRef<any>(null);
 
-  // Initialize Camera
+  // Initialize Camera for Portrait
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({
-        video: { facingMode: 'environment' },
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1080 },
+          height: { ideal: 1920 },
+        },
       })
       .then((stream) => {
         if (videoRef.current) {
@@ -43,26 +47,55 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
 
   // Helpers
 
-  // Fix orientation based on actual device orientation
-  const fixOrientation = (src: any, video: HTMLVideoElement) => {
-    const isPortrait = video.videoHeight > video.videoWidth;
-
-    if (isPortrait && src.cols > src.rows) {
+  // Force portrait orientation
+  const forcePortrait = (src: any) => {
+    if (src.cols > src.rows) {
       const rotated = new window.cv.Mat();
       window.cv.rotate(src, rotated, window.cv.ROTATE_90_CLOCKWISE);
       src.delete();
       return rotated;
     }
-
     return src;
   };
 
-  // Un-mirror image
+  // Remove horizontal mirroring
   const unmirror = (src: any) => {
     const dst = new window.cv.Mat();
-    window.cv.flip(src, dst, 1); // horizontal flip
+    window.cv.flip(src, dst, 1);
     src.delete();
     return dst;
+  };
+
+  // OCR preprocessing (restaurant-light-proof)
+  const preprocessForOCR = (src: any) => {
+    const gray = new window.cv.Mat();
+    const clahe = new window.cv.Mat();
+    const blur = new window.cv.Mat();
+    const thresh = new window.cv.Mat();
+
+    window.cv.cvtColor(src, gray, window.cv.COLOR_RGBA2GRAY);
+
+    const claheObj = new window.cv.CLAHE(2.0, new window.cv.Size(8, 8));
+    claheObj.apply(gray, clahe);
+    claheObj.delete();
+
+    window.cv.GaussianBlur(clahe, blur, new window.cv.Size(3, 3), 0);
+
+    window.cv.adaptiveThreshold(
+      blur,
+      thresh,
+      255,
+      window.cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+      window.cv.THRESH_BINARY,
+      31,
+      10
+    );
+
+    gray.delete();
+    clahe.delete();
+    blur.delete();
+
+    return thresh;
   };
 
   const orderPoints = (pts: any[]) => {
@@ -70,10 +103,10 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     const diff = pts.map((p) => p.x - p.y);
 
     return [
-      pts[sum.indexOf(Math.min(...sum))], // TL
-      pts[diff.indexOf(Math.min(...diff))], // TR
-      pts[sum.indexOf(Math.max(...sum))], // BR
-      pts[diff.indexOf(Math.max(...diff))], // BL
+      pts[sum.indexOf(Math.min(...sum))],
+      pts[diff.indexOf(Math.min(...diff))],
+      pts[sum.indexOf(Math.max(...sum))],
+      pts[diff.indexOf(Math.max(...diff))],
     ];
   };
 
@@ -82,7 +115,6 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     if (!videoRef.current || !window.cv || !overlayRef.current) return false;
 
     const video = videoRef.current;
-
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = video.videoWidth;
     tempCanvas.height = video.videoHeight;
@@ -91,7 +123,7 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     ctx.drawImage(video, 0, 0);
 
     let src = window.cv.imread(tempCanvas);
-    src = fixOrientation(src, video);
+    src = forcePortrait(src);
     src = unmirror(src);
 
     const gray = new window.cv.Mat();
@@ -126,7 +158,6 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     for (let i = 0; i < contours.size(); i++) {
       const cnt = contours.get(i);
       const area = window.cv.contourArea(cnt);
-
       if (area < src.rows * src.cols * 0.25) continue;
 
       const peri = window.cv.arcLength(cnt, true);
@@ -143,7 +174,6 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
 
     receiptContourRef.current = bestContour;
 
-    // Draw overlay
     const overlay = overlayRef.current;
     overlay.width = src.cols;
     overlay.height = src.rows;
@@ -154,13 +184,11 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
       octx.strokeStyle = '#22c55e';
       octx.lineWidth = 4;
       octx.beginPath();
-
       for (let i = 0; i < 4; i++) {
         const x = bestContour.intPtr(i, 0)[0];
         const y = bestContour.intPtr(i, 0)[1];
         i === 0 ? octx.moveTo(x, y) : octx.lineTo(x, y);
       }
-
       octx.closePath();
       octx.stroke();
     }
@@ -180,18 +208,16 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     const interval = setInterval(() => {
       setAligned(detectReceipt());
     }, 400);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Capture & Auto-Crop
+  // Capture & Crop
   const capture = () => {
     if (!videoRef.current || !canvasRef.current || !receiptContourRef.current)
       return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
@@ -199,7 +225,7 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     ctx.drawImage(video, 0, 0);
 
     let src = window.cv.imread(canvas);
-    src = fixOrientation(src, video);
+    src = forcePortrait(src);
     src = unmirror(src);
 
     const pts = [];
@@ -239,14 +265,10 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     const M = window.cv.getPerspectiveTransform(srcPts, dstPts);
     const dst = new window.cv.Mat();
 
-    window.cv.warpPerspective(
-      src,
-      dst,
-      M,
-      new window.cv.Size(width, height)
-    );
+    window.cv.warpPerspective(src, dst, M, new window.cv.Size(width, height));
 
-    window.cv.imshow(canvas, dst);
+    const ocrReady = preprocessForOCR(dst);
+    window.cv.imshow(canvas, ocrReady);
 
     setFlash(true);
     setTimeout(() => setFlash(false), 150);
@@ -258,6 +280,7 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
 
     src.delete();
     dst.delete();
+    ocrReady.delete();
     srcPts.delete();
     dstPts.delete();
     M.delete();
