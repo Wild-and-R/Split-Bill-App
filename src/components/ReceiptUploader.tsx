@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { performOCR } from '@/lib/ocr';
 
 interface UploaderProps {
@@ -17,6 +17,8 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
     typeof navigator !== 'undefined' &&
     /iPhone|Android/i.test(navigator.userAgent);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const handleProcessReceipt = async () => {
     if (!file) return;
 
@@ -32,14 +34,10 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
         body: JSON.stringify({ rawText }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed AI extraction');
-      }
+      if (!response.ok) throw new Error('Failed AI extraction');
 
       const data = await response.json();
-      if (!data.items?.length) {
-        throw new Error('No items detected');
-      }
+      if (!data.items?.length) throw new Error('No items detected');
 
       onAnalysisComplete(data.items);
     } catch (err) {
@@ -55,11 +53,22 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
         Scan Your Receipt
       </h2>
 
-      {/* Native Camera / Upload */}
+      {/* Custom Upload / Camera Button */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => inputRef.current?.click()}
+          className="bg-blue-600 text-white py-2 px-6 rounded-lg font-semibold"
+        >
+          {isMobile ? 'Take Photo' : 'Upload Photo'}
+        </button>
+      </div>
+
+      {/* Hidden file input */}
       <input
         type="file"
         accept="image/*"
         capture={isMobile ? 'environment' : undefined}
+        ref={inputRef}
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (!f) return;
@@ -67,12 +76,10 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
           setPreview(URL.createObjectURL(f));
           setError(null);
         }}
-        className="block w-full text-sm text-gray-500
-          file:mr-4 file:py-2 file:px-4
-          file:rounded-full file:border-0
-          file:bg-blue-50 file:text-blue-700"
+        className="hidden"
       />
 
+      {/* Preview */}
       {preview && (
         <img
           src={preview}
@@ -81,6 +88,7 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
         />
       )}
 
+      {/* Process Button */}
       {file && (
         <button
           onClick={handleProcessReceipt}
@@ -92,9 +100,7 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
       )}
 
       {error && (
-        <p className="text-red-500 text-sm mt-4 text-center">
-          {error}
-        </p>
+        <p className="text-red-500 text-sm mt-4 text-center">{error}</p>
       )}
     </div>
   );
