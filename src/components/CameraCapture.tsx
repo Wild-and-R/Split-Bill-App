@@ -1,5 +1,3 @@
-//Use for mobile only
-
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -24,37 +22,47 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
   const [flash, setFlash] = useState(false);
 
   const receiptContourRef = useRef<any>(null);
-  const rotatedRef = useRef<boolean>(false);
 
-  // initialize camera
+  // Initialize Camera
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({
         video: { facingMode: 'environment' },
       })
       .then((stream) => {
-        if (videoRef.current) videoRef.current.srcObject = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
       });
 
     return () => {
-      const tracks = (videoRef.current?.srcObject as MediaStream)
-        ?.getTracks();
+      const tracks = (videoRef.current?.srcObject as MediaStream)?.getTracks();
       tracks?.forEach((t) => t.stop());
     };
   }, []);
 
   // Helpers
-  const rotateIfNeeded = (src: any) => {
-    rotatedRef.current = false;
 
-    if (src.cols > src.rows) {
+  // Fix orientation based on actual device orientation
+  const fixOrientation = (src: any, video: HTMLVideoElement) => {
+    const isPortrait = video.videoHeight > video.videoWidth;
+
+    if (isPortrait && src.cols > src.rows) {
       const rotated = new window.cv.Mat();
       window.cv.rotate(src, rotated, window.cv.ROTATE_90_CLOCKWISE);
       src.delete();
-      rotatedRef.current = true;
       return rotated;
     }
+
     return src;
+  };
+
+  // Un-mirror image
+  const unmirror = (src: any) => {
+    const dst = new window.cv.Mat();
+    window.cv.flip(src, dst, 1); // horizontal flip
+    src.delete();
+    return dst;
   };
 
   const orderPoints = (pts: any[]) => {
@@ -74,14 +82,17 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     if (!videoRef.current || !window.cv || !overlayRef.current) return false;
 
     const video = videoRef.current;
+
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = video.videoWidth;
     tempCanvas.height = video.videoHeight;
+
     const ctx = tempCanvas.getContext('2d')!;
     ctx.drawImage(video, 0, 0);
 
     let src = window.cv.imread(tempCanvas);
-    src = rotateIfNeeded(src);
+    src = fixOrientation(src, video);
+    src = unmirror(src);
 
     const gray = new window.cv.Mat();
     const blur = new window.cv.Mat();
@@ -132,7 +143,7 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
 
     receiptContourRef.current = bestContour;
 
-    // Draw overlay contour
+    // Draw overlay
     const overlay = overlayRef.current;
     overlay.width = src.cols;
     overlay.height = src.rows;
@@ -140,16 +151,16 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     octx.clearRect(0, 0, overlay.width, overlay.height);
 
     if (bestContour) {
-      octx.strokeStyle = '#22c55e'; // green-500
+      octx.strokeStyle = '#22c55e';
       octx.lineWidth = 4;
       octx.beginPath();
 
       for (let i = 0; i < 4; i++) {
         const x = bestContour.intPtr(i, 0)[0];
         const y = bestContour.intPtr(i, 0)[1];
-        if (i === 0) octx.moveTo(x, y);
-        else octx.lineTo(x, y);
+        i === 0 ? octx.moveTo(x, y) : octx.lineTo(x, y);
       }
+
       octx.closePath();
       octx.stroke();
     }
@@ -164,21 +175,23 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     return !!bestContour;
   };
 
-  // Cont Detection loop
+  // Detection Loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAligned(detectReceipt());
     }, 400);
+
     return () => clearInterval(interval);
   }, []);
 
-  // Capture and auto-crop
+  // Capture & Auto-Crop
   const capture = () => {
     if (!videoRef.current || !canvasRef.current || !receiptContourRef.current)
       return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
@@ -186,7 +199,8 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     ctx.drawImage(video, 0, 0);
 
     let src = window.cv.imread(canvas);
-    src = rotateIfNeeded(src);
+    src = fixOrientation(src, video);
+    src = unmirror(src);
 
     const pts = [];
     for (let i = 0; i < 4; i++) {
@@ -256,16 +270,15 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
         ref={videoRef}
         autoPlay
         playsInline
+        muted
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* OpenCV overlay */}
       <canvas
         ref={overlayRef}
         className="absolute inset-0 w-full h-full pointer-events-none"
       />
 
-      {/* Guide frame */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           className={`w-2/3 h-5/6 border-4 rounded-xl transition-colors
