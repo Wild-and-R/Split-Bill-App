@@ -102,29 +102,34 @@ export default function ItemList({ initialItems }: ItemListProps) {
 
   const shareText = buildShareText();
 
-  const shareWhatsApp = () => {
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-      '_blank'
-    );
-  };
+  // Check if user is on mobile
+const isMobile = () => /Mobi|Android/i.test(navigator.userAgent);
 
-  const shareLine = () => {
-    window.open(
-      `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`,
-      '_blank'
-    );
-  };
-
-  const shareTelegram = () => {
+const shareWhatsApp = () => {
   const text = encodeURIComponent(shareText);
-  const url = encodeURIComponent(window.location.href);
-
-  window.open(
-    `https://t.me/share/url?url=${url}&text=${text}`,
-    '_blank'
-  );
+  const url = isMobile()
+    ? `https://wa.me/?text=${text}` // Mobile
+    : `https://web.whatsapp.com/send?text=${text}`; // Desktop
+  window.open(url, '_blank');
 };
+
+const shareLine = () => {
+  const text = encodeURIComponent(shareText);
+  const url = isMobile()
+    ? `line://msg/text/${text}` // Mobile LINE app
+    : `https://social-plugins.line.me/lineit/share?text=${text}`; // Desktop web LINE
+  window.open(url, '_blank');
+};
+
+const shareTelegram = () => {
+  const text = encodeURIComponent(shareText);
+  const pageUrl = encodeURIComponent(window.location.href);
+  const url = isMobile()
+    ? `https://t.me/share/url?url=${pageUrl}&text=${text}` // Mobile
+    : `https://t.me/share/url?url=${pageUrl}&text=${text}`; // Desktop also works
+  window.open(url, '_blank');
+};
+
 
 
   // Save as Image
