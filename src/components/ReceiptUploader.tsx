@@ -123,25 +123,27 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
           </>
         )}
 
-        {/* Upload Picture (Desktop + Mobile) */}
-        <label className="block w-full">
-          <span className="block text-sm font-semibold mb-1">
-            Upload Picture
-          </span>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              handleFileChange(f, false);
-            }}
-            className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:bg-blue-50 file:text-blue-700"
-          />
-        </label>
+        {/* Upload Picture (Desktop only) */}
+        {!isMobile && (
+          <label className="block w-full">
+            <span className="block text-sm font-semibold mb-1">
+              Upload Picture
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                handleFileChange(f, false);
+              }}
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:bg-blue-50 file:text-blue-700"
+            />
+          </label>
+        )}
       </div>
 
       {/* Crop UI (Camera only) */}
