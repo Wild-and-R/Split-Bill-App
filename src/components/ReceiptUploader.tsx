@@ -69,7 +69,7 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
-              className="w-full bg-green-600 text-white py-3 rounded-xl font-bold"
+              className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold"
             >
               Take Photo
             </button>
