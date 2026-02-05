@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Cropper from 'react-easy-crop';
 import { performOCR } from '@/lib/ocr';
+import { getCroppedImg } from '@/lib/cropImage';
 
 interface UploaderProps {
   onAnalysisComplete: (items: any[]) => void;
@@ -13,18 +15,50 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Crop state
+  const [cropping, setCropping] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+
   // Detect mobile for native camera
   const isMobile =
     typeof navigator !== 'undefined' &&
     /iPhone|Android/i.test(navigator.userAgent);
 
-  const handleFileChange = (f: File) => {
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+
+  /**
+   * Handle file selection
+   * @param f File
+   * @param fromCamera boolean
+   */
+  const handleFileChange = (f: File, fromCamera: boolean) => {
+    const url = URL.createObjectURL(f);
+    setPreview(url);
     setError(null);
+
+    if (fromCamera) {
+      // Camera photos → crop
+      setFile(f);
+      setCropping(true);
+    } else {
+      // Uploaded images → skip crop
+      setFile(f);
+      setCropping(false);
+    }
   };
 
-  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const handleCropConfirm = async () => {
+    if (!preview || !croppedAreaPixels) return;
+
+    const croppedFile = await getCroppedImg(preview, croppedAreaPixels);
+    const croppedPreview = URL.createObjectURL(croppedFile);
+
+    setFile(croppedFile);
+    setPreview(croppedPreview);
+    setCropping(false);
+  };
 
   const handleProcessReceipt = async () => {
     if (!file) return;
@@ -83,7 +117,7 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (!f) return;
-                handleFileChange(f);
+                handleFileChange(f, true);
               }}
             />
           </>
@@ -91,14 +125,16 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
 
         {/* Upload Picture (Desktop + Mobile) */}
         <label className="block w-full">
-          <span className="block text-sm font-semibold mb-1">Upload Picture</span>
+          <span className="block text-sm font-semibold mb-1">
+            Upload Picture
+          </span>
           <input
             type="file"
             accept="image/*"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (!f) return;
-              handleFileChange(f);
+              handleFileChange(f, false);
             }}
             className="block w-full text-sm text-gray-500
               file:mr-4 file:py-2 file:px-4
@@ -108,8 +144,32 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
         </label>
       </div>
 
-      {/* Preview */}
-      {preview && (
+      {/* Crop UI (Camera only) */}
+      {cropping && preview && (
+        <div className="relative w-full h-80 mt-4 bg-black rounded-lg overflow-hidden">
+          <Cropper
+            image={preview}
+            crop={crop}
+            zoom={zoom}
+            aspect={3 / 4}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={(_, pixels) =>
+              setCroppedAreaPixels(pixels)
+            }
+          />
+
+          <button
+            onClick={handleCropConfirm}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-xl font-bold"
+          >
+            Use This Crop
+          </button>
+        </div>
+      )}
+
+      {/* Preview (non-cropping) */}
+      {preview && !cropping && (
         <img
           src={preview}
           alt="Receipt preview"
@@ -118,7 +178,7 @@ export default function ReceiptUploader({ onAnalysisComplete }: UploaderProps) {
       )}
 
       {/* Analyze Button */}
-      {file && (
+      {file && !cropping && (
         <button
           onClick={handleProcessReceipt}
           disabled={loading}
