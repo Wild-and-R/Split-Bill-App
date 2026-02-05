@@ -268,7 +268,13 @@ export default function CameraCapture({ onCapture, onCancel }: Props) {
     window.cv.warpPerspective(src, dst, M, new window.cv.Size(width, height));
 
     const ocrReady = preprocessForOCR(dst);
+
+    // resize canvas to OCR image size
+    canvas.width = ocrReady.cols;
+    canvas.height = ocrReady.rows;
+
     window.cv.imshow(canvas, ocrReady);
+
 
     setFlash(true);
     setTimeout(() => setFlash(false), 150);
