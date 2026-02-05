@@ -62,7 +62,7 @@ export default function Home() {
           <div>
             <div className="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4 font-bold">3</div>
             <h3 className="font-semibold text-gray-800">Split & Share</h3>
-            <p className="text-sm text-gray-500">Send split bills in WhatsApp to everyone.</p>
+            <p className="text-sm text-gray-500">Send split bills to everyone.</p>
           </div>
         </section>
         )}
