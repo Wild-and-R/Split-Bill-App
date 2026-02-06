@@ -24,4 +24,13 @@ This app is deployed on Vercel
 https://split-bill-app-blond.vercel.app/
 
 ## Screenshots
+The App in Desktop
 ![Desktop App](Screenshots/desktopsplitbillapp.jpg)
+The App in Mobile
+![Mobile App](Screenshots/1000014260.jpg)
+After taking a photo
+![Mobile Photo](Screenshots/1000014262.jpg)
+Equal Split
+![Equal Split](Screenshots/1000014264.jpg)
+Split per Item
+![Item Split](Screenshots/1000014266.jpg)
