@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## About This App
 
-## Getting Started
+This is an app to split bills when you're eating out with your friends or family. Simply snap a picture with your phone and the app will calculate the split bill, either by splitting equally or by splitting per item. You can also use a desktop to upload the bill image if you went home and realized the bill should have been split instead of paying for it alone!
 
-First, run the development server:
+## Tech Stack Used
+This project uses: 
+1. Next.js 16 for routing, API route, client components and server route for API calls. 
+2. React 19 for items, split logic and cropping UI.
+3. Tailwind CSS v4 for styling.
+4. react-easy-crop for mobile camera photos and manual cropping, output is Canvas-based.
+5. Canvas API for cropping and generating "Saved as Image" split bill summary.
+6. Tesseract.js for OCR with english + indonesian languages.
+7. Google gemini-2.5-flash for structuring OCR into JSON item and price.
+8. TypeScript for tooling.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## How to get started
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Simply open up the deployed website listed below, snap a picture if you're in mobile or upload an image if in desktop, let the AI analyze it, decide to split equal or per item, then share it with the people you ate with.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployed on Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This app is deployed on Vercel
 
-## Learn More
+https://split-bill-app-blond.vercel.app/
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Screenshots
