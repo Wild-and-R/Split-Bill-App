@@ -368,7 +368,7 @@ const shareTelegram = () => {
                     className={`px-2 py-0.5 rounded text-xs border
                       ${
                         item.assignedTo?.includes(pIdx)
-                          ? 'bg-green-600 text-white border-green-600'
+                          ? 'bg-blue-600 text-white border-blue-600'
                           : 'bg-white text-gray-600 border-gray-300'
                       }`}
                   >
@@ -517,7 +517,7 @@ const shareTelegram = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-green-50 p-4 rounded-xl mt-4 space-y-2">
+        <div className="bg-blue-50 p-4 rounded-xl mt-4 space-y-2">
           {people.map((person, idx) => (
             <div key={idx} className="flex justify-between text-sm">
               <span>{person}</span>
