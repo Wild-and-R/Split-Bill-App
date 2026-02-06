@@ -24,3 +24,4 @@ This app is deployed on Vercel
 https://split-bill-app-blond.vercel.app/
 
 ## Screenshots
+![Desktop App](Screenshots/desktopsplitbillapp.jpg)
