@@ -45,9 +45,12 @@ export default function ItemList({ initialItems }: ItemListProps) {
   };
 
   const subtotal = items.reduce((sum, item) => sum + Number(item.price), 0);
-  const tax = Math.round(subtotal * (taxRate / 100));
+
   const serviceCharge = Math.round(subtotal * (serviceRate / 100));
-  const totalPrice = subtotal + tax + serviceCharge;
+  const taxableAmount = subtotal + serviceCharge;
+  const tax = Math.round(taxableAmount * (taxRate / 100));
+
+  const totalPrice = subtotal + serviceCharge + tax;
 
   const roundUnit = 100;
   const roundedTotal = Math.round(totalPrice / roundUnit) * roundUnit;
