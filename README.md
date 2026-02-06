@@ -29,8 +29,9 @@ The App in Desktop
 The App in Mobile
 ![Mobile App](Screenshots/1000014260.jpg)
 After taking a photo
-![Mobile Photo](Screenshots/1000014262.jpg)
+![Mobile Photo](Screenshots/1000014274.jpg)
 Equal Split
-![Equal Split](Screenshots/1000014264.jpg)
+![Equal Split](Screenshots/1000014276.jpg)
 Split per Item
-![Item Split](Screenshots/1000014268.jpg)
+![Item Split](Screenshots/1000014278.jpg)
+![Item Split2](Screenshots/1000014280.jpg)
