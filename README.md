@@ -2,7 +2,7 @@
 
 This is an app to split bills when you're eating out with your friends or family. Simply snap a picture with your phone and the app will calculate the split bill, either by splitting equally or by splitting per item. You can also use a desktop to upload the bill image if you went home and realized the bill should have been split instead of paying for it alone!
 
-## Tech Stack Used
+## Tech Stacks Used
 This project uses: 
 1. Next.js 16 for routing, API route, client components and server route for API calls. 
 2. React 19 for items, split logic and cropping UI.
@@ -13,7 +13,7 @@ This project uses:
 7. Google gemini-2.5-flash for structuring OCR into JSON item and price.
 8. TypeScript for tooling.
 
-## How to get started
+## How To Get Started
 
 Simply open up the deployed website listed below, snap a picture if you're in mobile or upload an image if in desktop, let the AI analyze it, decide to split equal or per item, then share it with the people you ate with.
 
