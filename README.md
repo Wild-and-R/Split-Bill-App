@@ -21,7 +21,7 @@ Simply open up the deployed website listed below, snap a picture if you're in mo
 
 This app is deployed on Vercel
 
-https://split-bill-app-blond.vercel.app/
+https://wild-and-r-split-bill-app.vercel.app/
 
 ## Screenshots
 The App in Desktop
