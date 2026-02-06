@@ -24,6 +24,13 @@ export default function ItemList({ initialItems }: ItemListProps) {
   const [splitMode, setSplitMode] = useState<SplitMode>('equal');
   const [people, setPeople] = useState<string[]>(['Person 1']);
 
+  const formatIDR = (value: number) =>
+  value.toLocaleString('id-ID');
+
+  const parseIDR = (value: string) =>
+  Number(value.replace(/\./g, '').replace(/,/g, '')) || 0;
+
+
   useEffect(() => {
     if (splitMode === 'equal') {
       setPax(people.length || 1);
@@ -83,8 +90,17 @@ export default function ItemList({ initialItems }: ItemListProps) {
     let text = `Bill Split\n\n`;
 
     items.forEach((item) => {
-      text += `• ${item.name} — Rp ${item.price.toLocaleString('id-ID')}\n`;
-    });
+    text += `• ${item.name} — Rp ${item.price.toLocaleString('id-ID')}`;
+
+    if (splitMode === 'perItem' && item.assignedTo?.length) {
+      const pickedBy = item.assignedTo
+        .map((idx) => people[idx])
+        .join(', ');
+      text += `\n  Picked by: ${pickedBy}`;
+    }
+
+    text += '\n';
+  });
 
     text += `\nSubtotal: Rp ${subtotal.toLocaleString('id-ID')}`;
     text += `\nTax (${taxRate}%): Rp ${tax.toLocaleString('id-ID')}`;
@@ -116,20 +132,25 @@ const shareWhatsApp = () => {
   window.open(url, '_blank');
 };
 
-const shareLine = () => {
+const shareLine = async () => {
+  await navigator.clipboard.writeText(shareText);
+
   const text = encodeURIComponent(shareText);
+  const pageUrl = encodeURIComponent(window.location.href);
+
   const url = isMobile()
-    ? `line://msg/text/${text}` // Mobile LINE app
-    : `https://social-plugins.line.me/lineit/share?text=${text}`; // Desktop web LINE
+    ? `line://msg/text/${text}` //Mobile LINE
+    : `https://social-plugins.line.me/lineit/share?url=${pageUrl}&text=${text}`; //Desktop LINE
   window.open(url, '_blank');
 };
+
 
 const shareTelegram = () => {
   const text = encodeURIComponent(shareText);
   const pageUrl = encodeURIComponent(window.location.href);
   const url = isMobile()
-    ? `https://t.me/share/url?url=${pageUrl}&text=${text}` // Mobile
-    : `https://t.me/share/url?url=${pageUrl}&text=${text}`; // Desktop also works
+    ? `https://t.me/share/url?url=${pageUrl}&text=${text}` // Mobile Telegram
+    : `https://t.me/share/url?url=${pageUrl}&text=${text}`; // Desktop Telegram
   window.open(url, '_blank');
 };
 
@@ -342,12 +363,13 @@ const shareTelegram = () => {
               <div className="flex items-center bg-white border rounded px-2">
                 <span className="text-xs text-gray-400 mr-1">Rp</span>
                 <input
-                  type="number"
-                  value={item.price}
+                  type="text"
+                  inputMode="numeric"
+                  value={formatIDR(item.price)}
                   onChange={(e) =>
-                    updateItem(index, 'price', parseInt(e.target.value) || 0)
+                    updateItem(index, 'price', parseIDR(e.target.value))
                   }
-                  className="w-20 text-right text-sm outline-none"
+                  className="w-24 text-right text-sm outline-none"
                 />
               </div>
             </div>
