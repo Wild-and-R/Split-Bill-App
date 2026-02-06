@@ -33,4 +33,4 @@ After taking a photo
 Equal Split
 ![Equal Split](Screenshots/1000014264.jpg)
 Split per Item
-![Item Split](Screenshots/1000014266.jpg)
+![Item Split](Screenshots/1000014268.jpg)
